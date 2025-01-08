@@ -1,0 +1,11 @@
+{
+  "imports": {
+    "@ai-sdk/anthropic": "npm:@ai-sdk/anthropic@^1.0.7",
+    "@ai-sdk/openai": "npm:@ai-sdk/openai@^1.0.15",
+    "@ai-sdk/openai-compatible": "npm:@ai-sdk/openai-compatible@^0.0.14",
+    "@std/dotenv": "jsr:@std/dotenv@^0.225.3",
+    "ai": "npm:ai@^4.0.30",
+    "pdfjs-dist": "npm:pdfjs-dist@^4.10.38",
+    "pdfjs-legacy": "npm:pdfjs-dist/legacy/build/pdf.mjs"
+  }
+}

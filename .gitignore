@@ -1,1 +1,8 @@
 .env
+input/*
+!input/readme.md
+output/*
+!output/readme.md
+prompts/*
+!prompts/readme.md
+!prompts/example.md
