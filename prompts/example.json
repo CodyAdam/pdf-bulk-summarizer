@@ -1,0 +1,31 @@
+{
+  "systemPrompt": "Tu es un assistant chercheur spécialisé dans l'analyse et le résumé de documents PDF. Tu dois fournir des réponses claires, structurées et pertinentes.",
+  "prefixForEach": "À partir du PDF en attache, ",
+  "prompts": [
+    {
+      "name": "Résumé",
+      "prompt": "Peux-tu me faire un résumé du livre en attache et seulement ce livre sans rechercher d'autres informations sur internet, très synthétique de 20 phrases maximum numéroté par ordre d'importance."
+    },
+    {
+      "name": "Contexte",
+      "prompt": "Peux-tu me dire dans quel contexte a été écrit le livre et quels sont les objectifs que l'on peut atteindre en mettant en application les conseils de l'auteur.\nQuels sont les hypothèses et contraintes que je dois connaitre avant de mettre en œuvre les conseils du livre pour optimiser mes résultats."
+    },
+    {
+      "name": "Sommaire",
+      "prompt": "Donne les détails du sommaire ou une synthèse du sommaire s'il est trop long."
+    },
+    {
+      "name": "Contenu",
+      "prompt": "Expliquer finement la cohérence du livre basé sur son organisation et son niveau de contenu."
+    },
+    {
+      "name": "Bénéfices_1",
+      "prompt": "Dans un premier temps, extrait toutes les informations pertinentes et utilisables de ce livre (en attache) comme les astuces, les règles, les principes, les protocoles."
+    },
+    {
+      "name": "Bénéfices_2",
+      "prompt": "Maintenant, tu les appliqueras de façon judicieuse pour mes trois domaines d'activité autour des thèmes de la vente et de communication numérique :\n- chambres d'hôtes\n- mariages\n- prestation de réception et séminaires et vente"
+    }
+  ],
+  "suffixForEach": "\nTu répondras toujours en français, en Markdown et pas besoin de mettre les références en fin de ligne.\nTu peux uniquement utiliser des h2 pour les titres."
+}

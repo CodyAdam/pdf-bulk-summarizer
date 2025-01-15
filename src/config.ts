@@ -6,4 +6,19 @@ if (!Deno.env.get("PROMPT_USED")) {
 
 const promptUsed = Deno.env.get("PROMPT_USED");
 const promptBasePath = "./prompts/";
-export const prompt = await Deno.readTextFile(promptBasePath + promptUsed);
+const rawJsonPrompt = await Deno.readTextFile(promptBasePath + promptUsed);
+
+
+import { z } from "zod";
+
+const promptSchema = z.object({
+  systemPrompt: z.string(),
+  prefixForEach: z.string(),
+  prompts: z.array(z.object({
+    name: z.string(),
+    prompt: z.string()
+  })),
+  suffixForEach: z.string()
+});
+
+export const promptConfig = promptSchema.parse(JSON.parse(rawJsonPrompt));

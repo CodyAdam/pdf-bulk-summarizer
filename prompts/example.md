@@ -1,4 +1,3 @@
-
 Fait moi un résumé de ce PDF en faisant les parties ci-dessous.
 Tu répondras toujours en français, en Markdown et pas besoin de mettre les références en fin de ligne.
 Utilise uniquement les h1, h2 et h3 pour les titres.

@@ -1,5 +1,5 @@
 import { streamText } from "ai";
-import { prompt } from "./config.ts";
+import { promptConfig } from "./config.ts";
 import { model } from "./model.ts";
 import { extractTextFromPdf } from "./utils.ts";
 
@@ -9,6 +9,7 @@ import { extractTextFromPdf } from "./utils.ts";
 const EXTRACT_TEXT = false;
 
 async function summarizePdf(
+  prompt: { name: string; prompt: string },
   pdfInputPath: string,
   pdfOutputPath: string,
   extractText = false
@@ -16,13 +17,14 @@ async function summarizePdf(
   try {
     const result = streamText({
       model: model,
+      system: promptConfig.systemPrompt,
       messages: [
         {
           role: "user",
           content: [
             {
               type: "text",
-              text: prompt,
+              text: prompt.prompt,
             },
             extractText
               ? {
@@ -40,28 +42,41 @@ async function summarizePdf(
     });
 
     let characterCount = 0;
-    const file = await Deno.open(pdfOutputPath, { write: true, create: true });
+    const file = await Deno.open(pdfOutputPath, {
+      write: true,
+      create: true,
+      append: true,
+    });
     const encoder = new TextEncoder();
+
+    const fileName = pdfOutputPath.split("/").pop();
+
+    await file.write(
+      encoder.encode(`---
+title: ${fileName}
+---
+      
+# ${prompt.name}\n\n`)
+    );
 
     for await (const textPart of result.textStream) {
       await file.write(encoder.encode(textPart));
       characterCount += textPart.length;
       Deno.stdout.writeSync(
         new TextEncoder().encode(
-          `\rWriting in: ${pdfOutputPath} ${characterCount} characters`
+          `\r  Writing in: ${pdfOutputPath} ${characterCount} characters`
         )
       );
     }
     console.log(
-      `\rFinished writing: ${pdfOutputPath} ${characterCount} characters`
+      `\r  ✅ Finished writing: ${pdfOutputPath} ${characterCount} characters`
     );
     file.close();
-    console.log(result.finishReason);
   } catch (error) {
     if (error instanceof Error) {
-      console.error("Error summarizing PDF:", error.message);
+      console.error("  Error summarizing PDF:", error.message);
     } else {
-      console.error("Error summarizing PDF:", error);
+      console.error("  Error summarizing PDF:", error);
     }
   }
 }
@@ -87,6 +102,18 @@ for (const [index, file] of pdfFiles.entries()) {
       0
     )}%): ${file.name} `
   );
+  try {
+    await Deno.remove(outputPath);
+  } catch {
+    // Ignore error if file doesn't exist
+  }
+  const prompts = promptConfig.prompts.map((p) => ({
+    name: p.name,
+    prompt: `${promptConfig.prefixForEach}\n${p.prompt}\n${promptConfig.suffixForEach}`,
+  }));
 
-  await summarizePdf(pdfPath, outputPath, EXTRACT_TEXT);
+  for (const prompt of prompts) {
+    console.log("  Processing prompt: ", prompt.name);
+    await summarizePdf(prompt, pdfPath, outputPath, EXTRACT_TEXT);
+  }
 }
