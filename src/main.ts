@@ -7,6 +7,8 @@ import { extractTextFromPdf } from "./utils.ts";
 // If this is false, the pdf file will be sent to the model as a file.
 // This is for model that can't handle file input. (like Perplexity)
 const EXTRACT_TEXT = false;
+const INPUT_PATH = "./input"; // should not have a trailing slash
+const OUTPUT_PATH = "./output"; // should not have a trailing slash
 
 async function summarizePdf(
   prompt: { name: string; prompt: string },
@@ -44,68 +46,87 @@ async function summarizePdf(
     let characterCount = 0;
     const file = await Deno.open(pdfOutputPath, {
       write: true,
-      create: true,
       append: true,
     });
     const encoder = new TextEncoder();
-
-    const fileName = pdfOutputPath.split("/").pop();
-
-    await file.write(
-      encoder.encode(`---
-title: ${fileName}
----
-      
-# ${prompt.name}\n\n`)
-    );
 
     for await (const textPart of result.textStream) {
       await file.write(encoder.encode(textPart));
       characterCount += textPart.length;
       Deno.stdout.writeSync(
         new TextEncoder().encode(
-          `\r  Writing in: ${pdfOutputPath} ${characterCount} characters`
+          `\r    Writing in: ${pdfOutputPath} ${characterCount} characters`
         )
       );
     }
     console.log(
-      `\r  ✅ Finished writing: ${pdfOutputPath} ${characterCount} characters`
+      `\r    ✅ Finished writing: ${pdfOutputPath} ${characterCount} characters`
     );
     file.close();
   } catch (error) {
     if (error instanceof Error) {
-      console.error("  Error summarizing PDF:", error.message);
+      console.error("    Error summarizing PDF:", error.message);
     } else {
-      console.error("  Error summarizing PDF:", error);
+      console.error("    Error summarizing PDF:", error);
     }
   }
 }
 
 console.log("Starting using prompt: ", Deno.env.get("PROMPT_USED"), "\n");
 
-const inputFolder = "./input/";
-const outputFolder = "./output/";
-// Get all PDF files and their count upfront
-const allFiles = [...Deno.readDirSync(inputFolder)];
-const pdfFiles = allFiles.filter((f): f is Deno.DirEntry =>
-  f.name.endsWith(".pdf")
-);
+const pdfFiles: (Deno.DirEntry & { path: string })[] = [];
+
+function scanDir(dirPath: string) {
+  const items = [...Deno.readDirSync(dirPath)];
+  for (const item of items) {
+    if (item.isFile && item.name.endsWith(".pdf")) {
+      pdfFiles.push({ ...item, path: `${dirPath}/${item.name}` });
+    }
+    if (item.isDirectory) {
+      scanDir(`${dirPath}/${item.name}`);
+    }
+  }
+}
+
+scanDir(INPUT_PATH);
+
 const totalFiles = pdfFiles.length;
 
 for (const [index, file] of pdfFiles.entries()) {
-  const fileIndex = index + 1;
-  const pdfPath = `${inputFolder}${file.name}`;
-  const outputPath = `${outputFolder}${file.name.replace(".pdf", ".md")}`;
-  const percentage = (fileIndex / totalFiles) * 100;
+  const outputPath = file.path
+    .replace(INPUT_PATH, OUTPUT_PATH)
+    .replace(".pdf", ".md");
+  const percentage = (index / totalFiles) * 100;
   console.log(
-    `\nStart Processing (${fileIndex}/${totalFiles} - ${percentage.toFixed(
-      0
-    )}%): ${file.name} `
+    `\nProcessing (${index}/${totalFiles} - ${percentage.toFixed(0)}%): ${
+      file.path
+    } `
   );
   try {
-    await Deno.remove(outputPath);
+    // Ensure output directory exists
+    const outputDir = outputPath.substring(0, outputPath.lastIndexOf("/"));
+    await Deno.mkdir(outputDir, { recursive: true });
+
+    const fileInfo = await Deno.stat(outputPath);
+    if (fileInfo.isFile) {
+      console.log("  ⏭️  Skipping file: output already exists");
+      continue;
+    }
+    const encoder = new TextEncoder();
+    const f = await Deno.open(outputPath, {
+      write: true,
+      create: true,
+    });
+    await f.write(
+      encoder.encode(`---
+title: ${file.name}
+---
+      
+# ${prompt.name}\n\n`)
+    );
+    f.close();
   } catch {
-    // Ignore error if file doesn't exist
+    // File doesn't exist, continue with processing
   }
   const prompts = promptConfig.prompts.map((p) => ({
     name: p.name,
@@ -113,7 +134,7 @@ for (const [index, file] of pdfFiles.entries()) {
   }));
 
   for (const prompt of prompts) {
-    console.log("  Processing prompt: ", prompt.name);
-    await summarizePdf(prompt, pdfPath, outputPath, EXTRACT_TEXT);
+    console.log("  Processing prompt:", prompt.name);
+    await summarizePdf(prompt, file.path, outputPath, EXTRACT_TEXT);
   }
 }

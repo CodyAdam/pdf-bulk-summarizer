@@ -19,12 +19,12 @@
       "prompt": "Expliquer finement la cohérence du livre basé sur son organisation et son niveau de contenu."
     },
     {
-      "name": "Bénéfices_1",
+      "name": "Bénéfices 1",
       "prompt": "Dans un premier temps, extrait toutes les informations pertinentes et utilisables de ce livre (en attache) comme les astuces, les règles, les principes, les protocoles."
     },
     {
-      "name": "Bénéfices_2",
-      "prompt": "Maintenant, tu les appliqueras de façon judicieuse pour mes trois domaines d'activité autour des thèmes de la vente et de communication numérique :\n- chambres d'hôtes\n- mariages\n- prestation de réception et séminaires et vente"
+      "name": "Bénéfices 2",
+      "prompt": "Tu les appliqueras de façon judicieuse pour mes trois domaines d'activité autour des thèmes de la vente et de communication numérique :\n- chambres d'hôtes\n- mariages\n- prestation de réception et séminaires et vente"
     }
   ],
   "suffixForEach": "\nTu répondras toujours en français, en Markdown et pas besoin de mettre les références en fin de ligne.\nTu peux uniquement utiliser des h2 pour les titres."
